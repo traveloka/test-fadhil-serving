@@ -1,0 +1,4 @@
+type: serving
+name: test-fadhil
+owner: fadhil.mochammad@traveloka.com
+slackChannel: data-jenkins-hub

@@ -1,0 +1,66 @@
+app:
+  name: test-fadhil
+  env: prod
+
+  # the app's container resource spec
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+
+  # autoscale configuration
+  autoscale:
+    enabled: true
+    maxReplica: 10
+    minReplica: 1
+    targetCPUUtilizationPercentage: 60
+
+  # vault: https://github.com/tvlk-data/rm-helm-charts/blob/master/rm-app/values.yaml#L63-L67
+  vault:
+    enabled: "true"
+    vaultAddress: "https://vault.core.mgmt.tvlk-data.com"
+    vaultRole: "default"
+    vaultSkipVerify: "false"
+    vaultAgent: "false"
+    vaultPath: "tvlk-data-prod"
+
+  # it will configure the configmap named: "<app.name>-<app.track>-envs"
+  # by default it already contains ENVIRONMENT=<app.env>
+  configmap:
+    data:
+      SERVICE_OWNER: fadhil.mochammad@traveloka.com
+      VAULT_INIT: vault:secret/data/tvlk-data-ml-platform/init#INIT
+
+  # UNCOMMENT THIS TO CONFIGURE livenessProbe
+  livenessProbe:
+    httpGet:
+      path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+
+  # UNCOMMENT THIS TO CONFIGURE readinessProbe
+  readinessProbe:
+    httpGet:
+      path: /status
+    failureThreshold: 10
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+
+deployment:
+  timeout: 900 # type: int; desc: helm install timeout in seconds
+  
+infra:
+  virtualService:
+    # all request from this host will follow routing rules
+    hosts:
+    - raring-meerkat.tvlk-data.com
+    # istio ingress gateway
+    gateway: 
+    - raring-meerkat-gateway
+  # trafficRoute:
+  #   timeout: 60s          # Service timeout before sending timeout error to client
+  #   retries:
+  #     attempts: 3         # Retry the service request if error occured
+  #     perTryTimeout: 1s   # NOTES: THIS CONFIG OVERRIDE TIMEOUT CONFIG ABOVE. Service timeout before sending timeout error to client
